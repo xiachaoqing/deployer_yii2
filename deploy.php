@@ -1,7 +1,8 @@
 <?php
 namespace Deployer;
 require 'recipe/yii.php';
-
+// 预定的安装目录
+$path = '/home/banmauser/data/yii2';
 // Configuration
 set('ssh_type', 'native');   //录远程主机使用的方式，有三种：phpseclib（默认方式）、native、ext-ssh2
 set('ssh_multiplexing', true);   // 是否开启ssh通道复用技术（开启可以降低服务器和本地负载，并提升速度）
@@ -27,26 +28,23 @@ add('writable_dirs', []);   // 增加可写目录   规定那些目录是需要�
 
 // Servers
 // 针对每个服务器可以单独设置参数，设置的参数会覆盖全局的参数
-server('prod', '39.105.129.6') 
-    ->port(8022)
-    ->user('banmauser')
-    ->password('wf33cq!8fMUNydOd5#Ur') 
-    ->set('deploy_path', '/home/banmauser/data/yii2')   // 代码部署目录，注意：你的webserver，比如nginx，设置的root目录应该是/var/www/tb/current，因为current是一个指向当前线上实际使用的版本的软链
-    // ->identityFile('/home/vagrant/.ssh/id_rsa')
+server('prod', '39.105.129.6',8022)
+    ->user('deployer')
+    ->password('123456')
+    ->set('deploy_path', $path)   // 代码部署目录，注意：你的webserver，比如nginx，设置的root目录应该是/var/www/tb/current，因为current是一个指向当前线上实际使用的版本的软链
     ->set('branch', 'master')   // 指定发往这个服务器的分支，会覆盖全局设置的branch参数
     ->set('http_user', 'www-data') // 这个与 nginx 里的配置一致
-    ->stage('prod') // 标识该服务器类型，用于服务器分组
-    ->pty(true);
+    ->set('extra_stuff', '-t') // 随意指定其他什么参数
+    ->stage('prod'); // 标识该服务器类型，用于服务器分组
 
-server('beta', '39.105.129.6') 
-    ->port(8022)
-    ->user('banmauser')
-    ->password('wf33cq!8fMUNydOd5#Ur')
+server('beta', '39.105.129.6',8022)
+    ->user('deployer')
+    ->password('123456')
     ->set('deploy_path', '/home/banmauser/data/yii2/test')
     ->set('branch', 'beta')   // 测试环境使用beta分支
     ->set('http_user', 'www-data') // 这个与 nginx 里的配置一致
-    ->stage('beta')   // 放在beta分组
-    ->pty(true);
+    ->set('extra_stuff', '-t') // 随意指定其他什么参数
+    ->stage('beta');   // 放在beta分组
 
 
 // Tasks
@@ -57,7 +55,8 @@ task('success', function () {
  
 desc('重启php-fpm');    // 可以给任务增加一个描述，在执行dep list的时候将能看到这个描述
 task('php-fpm:restart', function () {
-    run('systemctl restart php-fpm.service');  // run函数定义在服务器执行的操作，通常是一个shell命令，可以有返回值，返回命令打印
+    // run('systemctl restart php-fpm.service');  // run函数定义在服务器执行的操作，通常是一个shell命令，可以有返回值，返回命令打印
+    run('sodu /etc/init.d/php5-fpm restart');
 });     // 聪明如你一定发现了，可以用run函数制作一些批量管理服务器的任务，比如批量重载所有的nginx配置文件、批量执行服务器上的脚本等
  
 after('deploy:symlink', 'php-fpm:restart'); // 钩子函数，表示执行完设置软链任务之后执行php-fpm重启任务
