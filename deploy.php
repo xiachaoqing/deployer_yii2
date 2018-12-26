@@ -3,9 +3,6 @@ namespace Deployer;
 require 'recipe/yii.php';
 
 // Configuration
-add('shared_files', []);   // 增加共享文件列表 
-add('shared_dirs', []);   //增加共享目录
-add('writable_dirs', []);   // 增加可写目录   规定那些目录是需要可以被web server写入的
 set('ssh_type', 'native');   //录远程主机使用的方式，有三种：phpseclib（默认方式）、native、ext-ssh2
 set('ssh_multiplexing', true);   // 是否开启ssh通道复用技术（开启可以降低服务器和本地负载，并提升速度）
 set('keep_releases', 10);   //报错10个之前版本，设置为-1表示一直保存历史版本
@@ -24,29 +21,32 @@ set('release_name', function () {   // 设置发布版名称，这里优先使�
     }
     return date('Ymd-H:i');
 });
+add('shared_files', []);   // 增加共享文件列表 
+add('shared_dirs', []);   //增加共享目录
+add('writable_dirs', []);   // 增加可写目录   规定那些目录是需要可以被web server写入的
 
 // Servers
 // 针对每个服务器可以单独设置参数，设置的参数会覆盖全局的参数
-server('prod', '39.105.129.6')
+server('prod', '39.105.129.6') 
+    ->port(8022)
     ->user('banmauser')
     ->password('wf33cq!8fMUNydOd5#Ur') 
-    ->port(8022)
-    ->set('deploy_path', '/data/www/yii2')   // 代码部署目录，注意：你的webserver，比如nginx，设置的root目录应该是/var/www/tb/current，因为current是一个指向当前线上实际使用的版本的软链
+    ->set('deploy_path', '/home/banmauser/data/yii2')   // 代码部署目录，注意：你的webserver，比如nginx，设置的root目录应该是/var/www/tb/current，因为current是一个指向当前线上实际使用的版本的软链
     // ->identityFile('/home/vagrant/.ssh/id_rsa')
     ->set('branch', 'master')   // 指定发往这个服务器的分支，会覆盖全局设置的branch参数
-    ->forwardAgent(true)
-    ->multiplexing(true)
-    ->set('http_user', ' www-data') // 这个与 nginx 里的配置一致
-    ->stage('prod');  // 标识该服务器类型，用于服务器分组
+    ->set('http_user', 'www-data') // 这个与 nginx 里的配置一致
+    ->stage('prod') // 标识该服务器类型，用于服务器分组
+    ->pty(true);
 
-server('beta', '39.105.129.6')
+server('beta', '39.105.129.6') 
+    ->port(8022)
     ->user('banmauser')
     ->password('wf33cq!8fMUNydOd5#Ur')
-    ->port(8022)
-    ->set('deploy_path', '/data/www/test')
+    ->set('deploy_path', '/home/banmauser/data/yii2/test')
     ->set('branch', 'beta')   // 测试环境使用beta分支
-    ->set('http_user', ' www-data') // 这个与 nginx 里的配置一致
-    ->stage('beta');    // 放在beta分组
+    ->set('http_user', 'www-data') // 这个与 nginx 里的配置一致
+    ->stage('beta')   // 放在beta分组
+    ->pty(true);
 
 
 // Tasks
