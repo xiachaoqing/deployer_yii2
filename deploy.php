@@ -53,7 +53,6 @@ task('success', function () {
     Deployer::setDefault('terminate_message', '<info>发布成功!</info>');
 })->once()->setPrivate();   // 增加once调用那么这个任务将会在本地执行，而非远端服务器，并且只执行一次
 
-
 // 我们也可以自定义部署的逻辑，比如调用Yii的init脚本初始化目录权限
 task('init', function() {
     // {{release_path}} 是deployer定义的变量，指程序部署到的目录位置
@@ -69,14 +68,6 @@ task('push', function() {
 task('cache', function() {
     run('/usr/bin/env php -r "opcache_reset();"');
 });
-
-// 在自带的部署任务完成后，执行自定义的逻辑
-// 更新yii2目录权限为线上配置
-after('deploy', 'init');
-// 更新指向线上目录的位置，这里才正式发布了
-after('deploy', 'push');
-// 更新opcache缓存，否则程序更改不会生效
-after('deploy', 'cache');
 
 desc('重启php-fpm');    // 可以给任务增加一个描述，在执行dep list的时候将能看到这个描述
 task('php-fpm:restart', function () {
@@ -98,6 +89,9 @@ task('deploy', [    // 可以设置复合任务，第二个参数是这个复合
     'deploy:clear_paths',   // 根据设置的clear_path参数，执行删除操作
     'deploy:symlink',   // 设置符号连接到最新更新的代码，线上此时访问的就是本次发布的代码了
     'deploy:unlock',     // 删除锁文件，以便下次发布
+    'init',    // 更新yii2目录权限为线上配置
+    'push',    // 更新指向线上目录的位置，这里才正式发布了
+    'cache',   // 更新opcache缓存，否则程序更改不会生效
     'cleanup',  // 根据keep_releases参数，清楚过老的版本，释放服务器磁盘空间
     'success'   // 执行成功任务，上面自己定义的，一般用来做提示
 ]);
