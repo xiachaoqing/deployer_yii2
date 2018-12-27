@@ -1,8 +1,9 @@
 <?php
 namespace Deployer;
 require 'recipe/yii.php';
+require 'recipe/symfony.php';
 // 预定的安装目录
-$path = '/home/banmauser/data/yii2';
+$path = '/home/deployer/yii2';
 // Configuration
 set('ssh_type', 'native');   //录远程主机使用的方式，有三种：phpseclib（默认方式）、native、ext-ssh2
 set('ssh_multiplexing', true);   // 是否开启ssh通道复用技术（开启可以降低服务器和本地负载，并提升速度）
@@ -25,7 +26,7 @@ set('release_name', function () {   // 设置发布版名称，这里优先使�
 add('shared_files', []);   // 增加共享文件列表 
 add('shared_dirs', []);   //增加共享目录
 add('writable_dirs', []);   // 增加可写目录   规定那些目录是需要可以被web server写入的
-
+// 指定git仓库的位置，如果是私有的，可以根据HTTP协议设置登录用户
 // Servers
 // 针对每个服务器可以单独设置参数，设置的参数会覆盖全局的参数
 server('prod', '39.105.129.6',8022)
@@ -40,7 +41,7 @@ server('prod', '39.105.129.6',8022)
 server('beta', '39.105.129.6',8022)
     ->user('deployer')
     ->password('123456')
-    ->set('deploy_path', '/home/banmauser/data/yii2/test')
+    ->set('deploy_path', '/home/deployer/yii2/test')
     ->set('branch', 'beta')   // 测试环境使用beta分支
     ->set('http_user', 'www-data') // 这个与 nginx 里的配置一致
     ->set('extra_stuff', '-t') // 随意指定其他什么参数
@@ -53,13 +54,13 @@ task('success', function () {
     Deployer::setDefault('terminate_message', '<info>发布成功!</info>');
 })->once()->setPrivate();   // 增加once调用那么这个任务将会在本地执行，而非远端服务器，并且只执行一次
  
-desc('重启php-fpm');    // 可以给任务增加一个描述，在执行dep list的时候将能看到这个描述
-task('php-fpm:restart', function () {
-    // run('systemctl restart php-fpm.service');  // run函数定义在服务器执行的操作，通常是一个shell命令，可以有返回值，返回命令打印
-    run('sodu /etc/init.d/php5-fpm restart');
-});     // 聪明如你一定发现了，可以用run函数制作一些批量管理服务器的任务，比如批量重载所有的nginx配置文件、批量执行服务器上的脚本等
+// desc('重启php-fpm');    // 可以给任务增加一个描述，在执行dep list的时候将能看到这个描述
+// task('php-fpm:restart', function () {
+//     // run('systemctl restart php-fpm.service');  // run函数定义在服务器执行的操作，通常是一个shell命令，可以有返回值，返回命令打印
+//     run('/etc/init.d/php5-fpm restart');
+// });     // 聪明如你一定发现了，可以用run函数制作一些批量管理服务器的任务，比如批量重载所有的nginx配置文件、批量执行服务器上的脚本等
  
-after('deploy:symlink', 'php-fpm:restart'); // 钩子函数，表示执行完设置软链任务之后执行php-fpm重启任务
+// after('deploy:symlink', 'php-fpm:restart'); // 钩子函数，表示执行完设置软链任务之后执行php-fpm重启任务
  
 desc('发布项目');
 task('deploy', [    // 可以设置复合任务，第二个参数是这个复合任务包括的所有子任务，将会依次执行
